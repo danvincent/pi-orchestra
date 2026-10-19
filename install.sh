@@ -52,17 +52,30 @@ echo "  Agent dir: $AGENT_DIR"
 mkdir -p "$EXTENSIONS_DIR" "$AGENTS_DIR" "$PROMPTS_DIR" "$SKILLS_DIR"
 
 # 1. Install the subagent extension as a directory (pi requires index.ts in a dir)
-SUBAGENT_SRC="$(find_subagent_ext)"
-if [[ -z "${SUBAGENT_SRC:-}" ]]; then
-  echo "WARNING: Could not find pi subagent extension. Install it manually:"
-  echo "  mkdir -p $EXTENSIONS_DIR/subagent"
-  echo "  ln -sf /path/to/pi/examples/extensions/subagent/index.ts $EXTENSIONS_DIR/subagent/index.ts"
-  echo "  ln -sf /path/to/pi/examples/extensions/subagent/agents.ts $EXTENSIONS_DIR/subagent/agents.ts"
-else
+# pi-orchestra vendors a patched copy that streams live tool output
+# (tool_execution_start/update/end) to the parent UI. Upstream only
+# forwards message_end, so long bash runs stayed silent until completion.
+# shortcut: tracks pi upstream; if upstream adds live streaming, diff
+# extensions/subagent/index.ts against their example and rebase, upgrade to copy.
+if [[ -f "$REPO_ROOT/extensions/subagent/index.ts" ]]; then
   mkdir -p "$EXTENSIONS_DIR/subagent"
-  ln -sf "$SUBAGENT_SRC/index.ts" "$EXTENSIONS_DIR/subagent/index.ts"
-  ln -sf "$SUBAGENT_SRC/agents.ts" "$EXTENSIONS_DIR/subagent/agents.ts"
-  echo "  Subagent extension: $SUBAGENT_SRC"
+  rm -f "$EXTENSIONS_DIR/subagent/index.ts" "$EXTENSIONS_DIR/subagent/agents.ts"
+  cp "$REPO_ROOT/extensions/subagent/index.ts" "$EXTENSIONS_DIR/subagent/index.ts"
+  cp "$REPO_ROOT/extensions/subagent/agents.ts" "$EXTENSIONS_DIR/subagent/agents.ts"
+  echo "  Subagent extension: pi-orchestra vendored (live streaming)"
+else
+  SUBAGENT_SRC="$(find_subagent_ext)"
+  if [[ -z "${SUBAGENT_SRC:-}" ]]; then
+    echo "WARNING: Could not find pi subagent extension. Install it manually:"
+    echo "  mkdir -p $EXTENSIONS_DIR/subagent"
+    echo "  ln -sf /path/to/pi/examples/extensions/subagent/index.ts $EXTENSIONS_DIR/subagent/index.ts"
+    echo "  ln -sf /path/to/pi/examples/extensions/subagent/agents.ts $EXTENSIONS_DIR/subagent/agents.ts"
+  else
+    mkdir -p "$EXTENSIONS_DIR/subagent"
+    ln -sf "$SUBAGENT_SRC/index.ts" "$EXTENSIONS_DIR/subagent/index.ts"
+    ln -sf "$SUBAGENT_SRC/agents.ts" "$EXTENSIONS_DIR/subagent/agents.ts"
+    echo "  Subagent extension: $SUBAGENT_SRC"
+  fi
 fi
 
 # 2. Copy agent definitions with model injection from models.json

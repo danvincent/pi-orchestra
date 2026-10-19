@@ -52,7 +52,7 @@ cd pi-orchestra
 ```
 
 The install script:
-1. Symlinks the `subagent` extension from the pi package into `~/.pi/agent/extensions/`
+1. Copies the vendored `subagent` extension (`extensions/subagent/`, live-streaming patched) into `~/.pi/agent/extensions/`
 2. Copies agent definitions to `~/.pi/agent/agents/`
 3. Copies prompt templates to `~/.pi/agent/prompts/`
 4. Copies skills to `~/.pi/agent/skills/`
